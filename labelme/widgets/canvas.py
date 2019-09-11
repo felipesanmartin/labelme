@@ -27,6 +27,7 @@ class Canvas(QtWidgets.QWidget):
     shapeMoved = QtCore.Signal()
     drawingPolygon = QtCore.Signal(bool)
     edgeSelected = QtCore.Signal(bool)
+    vertexSelected = QtCore.Signal(bool)
 
     CREATE, EDIT = 0, 1
 
@@ -268,6 +269,7 @@ class Canvas(QtWidgets.QWidget):
                 self.update()
             self.hVertex, self.hShape, self.hEdge = None, None, None
         self.edgeSelected.emit(self.hEdge is not None)
+        self.vertexSelected.emit(self.hVertex is not None)
 
     def addPointToEdge(self):
         if (self.hShape is None and

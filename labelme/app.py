@@ -29,6 +29,8 @@ from labelme.widgets import LabelQListWidget
 from labelme.widgets import ToolBar
 from labelme.widgets import ZoomWidget
 
+from plugin import Plugin
+
 
 # FIXME
 # - [medium] Set max zoom value to something big enough for FitWidth/Window
@@ -145,6 +147,7 @@ class MainWindow(QtWidgets.QMainWindow):
         )
         self.canvas.zoomRequest.connect(self.zoomRequest)
 
+
         scrollArea = QtWidgets.QScrollArea()
         scrollArea.setWidget(self.canvas)
         scrollArea.setWidgetResizable(True)
@@ -158,6 +161,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.canvas.shapeMoved.connect(self.setDirty)
         self.canvas.selectionChanged.connect(self.shapeSelectionChanged)
         self.canvas.drawingPolygon.connect(self.toggleDrawingSensitive)
+
+        # Add own actions
+        self.plugin = Plugin(canvas=self.canvas, parent=self)
 
         self.setCentralWidget(scrollArea)
 
@@ -323,6 +329,16 @@ class MainWindow(QtWidgets.QMainWindow):
             enabled=False,
         )
 
+        deletePoint = action(
+            'Delete Point from Polygon',
+            self.plugin.deletePoint,
+            shortcuts['add_point_to_edge'],
+            'edit',
+            'Delete highlight point from Polygon',
+            enabled=False,
+        )
+
+
         undo = action('Undo', self.undoShapeEdit, shortcuts['undo'], 'undo',
                       'Undo last add and edit of shape', enabled=False)
 
@@ -421,6 +437,7 @@ class MainWindow(QtWidgets.QMainWindow):
             delete=delete, edit=edit, copy=copy,
             undoLastPoint=undoLastPoint, undo=undo,
             addPointToEdge=addPointToEdge,
+            deletePoint=deletePoint,
             createMode=createMode, editMode=editMode,
             createRectangleMode=createRectangleMode,
             createCircleMode=createCircleMode,
@@ -444,6 +461,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 undoLastPoint,
                 None,
                 addPointToEdge,
+                deletePoint,
                 None,
                 color1,
                 color2,
@@ -467,6 +485,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 undo,
                 undoLastPoint,
                 addPointToEdge,
+                deletePoint
             ),
             onLoadActive=(
                 close,
@@ -485,14 +504,21 @@ class MainWindow(QtWidgets.QMainWindow):
             self.actions.addPointToEdge.setEnabled
         )
 
+        self.canvas.vertexSelected.connect(
+            self.actions.deletePoint.setEnabled
+        )
+
         self.menus = utils.struct(
             file=self.menu('&File'),
             edit=self.menu('&Edit'),
             view=self.menu('&View'),
             help=self.menu('&Help'),
+            # Add own plugin to menu
+            plugin=self.menu('&Plugin'),
             recentFiles=QtWidgets.QMenu('Open &Recent'),
             labelList=labelMenu,
         )
+
 
         utils.addActions(
             self.menus.file,
@@ -513,6 +539,18 @@ class MainWindow(QtWidgets.QMainWindow):
             ),
         )
         utils.addActions(self.menus.help, (help,))
+
+        # Add difference action
+        difference = action('&Difference', self.plugin.difference, icon=None,
+                      tip='Difference between selected shape and remains shapes')
+
+        # Add difference action
+        union = action('&Union', self.plugin.union, icon=None,
+                      tip='Union between selected shapes')
+
+        utils.addActions(self.menus.plugin, (difference,))
+        utils.addActions(self.menus.plugin, (union,))
+
         utils.addActions(
             self.menus.view,
             (
@@ -955,6 +993,8 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def loadShapes(self, shapes, replace=True):
         self._noSelectionSlot = True
+        if replace:
+            self.labelList.clear()
         for shape in shapes:
             self.addLabel(shape)
         self.labelList.clearSelection()

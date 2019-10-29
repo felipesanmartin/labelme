@@ -1,51 +1,12 @@
 from qtpy import QtCore
 from shapely.geometry import Polygon
 from shapely.geometry import MultiPolygon
-import copy
-import utils
-import functools
 
 
 class Plugin():
-
-    # polygon, rectangle, line, or point
-    _createMode = 'polygon'
-
     def __init__(self, canvas = None, parent = None):
         self.canvas = canvas
         self.parent = parent
-        # Initialise local state.
-        self.shapes = []
-        self.shapesBackups = []
-        self.current = None
-        self.selectedShapes = []  # save the selected shapes here
-        self.selectedShapesCopy = []
-
-        action = functools.partial(utils.newAction, self.parent)
-
-        '''
-        self.lineColor = QtGui.QColor(0, 0, 255)
-        # self.line represents:
-        #   - createMode == 'polygon': edge from last point to current
-        #   - createMode == 'rectangle': diagonal line of the rectangle
-        #   - createMode == 'line': the line
-        #   - createMode == 'point': the point
-        self.line = Shape(line_color=self.lineColor)
-        self.prevPoint = QtCore.QPoint()
-        self.prevMovePoint = QtCore.QPoint()
-        self.offsets = QtCore.QPoint(), QtCore.QPoint()
-        self.scale = 1.0
-        self.pixmap = QtGui.QPixmap()
-        self.visible = {}
-        self._hideBackround = False
-        self.hideBackround = False
-        self.hShape = None
-        self.hVertex = None
-        self.hEdge = None
-        self.movingShape = False
-        self._painter = QtGui.QPainter()
-        self._cursor = CURSOR_DEFAULT
-        '''
 
     def difference(self):
         selectedShape = self.canvas.selectedShapes

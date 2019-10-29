@@ -29,7 +29,7 @@ from labelme.widgets import LabelQListWidget
 from labelme.widgets import ToolBar
 from labelme.widgets import ZoomWidget
 
-from plugin import Plugin
+from labelme.plugin import Plugin
 
 
 # FIXME
